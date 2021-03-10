@@ -3,33 +3,68 @@ import requests from "./requests";
 import "./App.css";
 import { useState, useEffect } from "react";
 
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+
 const posterBaseUrl = "http://image.tmdb.org/t/p/original";
 
 function App() {
-  const [city, setCity] = useState("vancouver");
+  const MySwal = withReactContent(Swal);
+
+  const [city, setCity] = useState("");
   const [weather, setWeather] = useState("");
   const [movie, setMovie] = useState([]);
   const [quote, setQuote] = useState("");
 
+  const [driverCoords, setDriverCoords] = useState({ lng: 0, lat: 0 });
+  const onSucces = ({ coords: { latitude, longitude } }) => {
+    setDriverCoords({ lat: latitude, lng: longitude });
+  };
+  const onError = (error) => {
+    console.log(error);
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
+
   useEffect(() => {
-    fetchWeather();
+    navigator.geolocation.watchPosition(onSucces, onError, {});
   }, []);
 
-  const fetchWeather = async () => {
+  useEffect(() => {
+    fetchGeolocationWeather(driverCoords.lat, driverCoords.lng);
+  }, [driverCoords.lat, driverCoords.lng]);
+
+  const fetchGeolocationWeather = async (lat, lng) => {
     try {
       const openweathermap = axios.create({
         baseURL: "https://api.openweathermap.org/data/2.5"
       });
       const req_weather = await openweathermap.get(
-        requests.fetchWeather.concat(`&q=${city}&units=metric`)
+        requests.fetchWeather.concat(`&lat=${lat}&lon=${lng}&units=metric`)
       );
       setWeather(req_weather.data);
       // console.log(req_weather.data);
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  const fetchCityWeather = async (q_city) => {
+    try {
+      const openweathermap = axios.create({
+        baseURL: "https://api.openweathermap.org/data/2.5"
+      });
+      const req_weather = await openweathermap.get(
+        requests.fetchWeather.concat(`&q=${q_city}&units=metric`)
+      );
+      setWeather(req_weather.data);
+      // console.log(req_weather.data);
+    } catch (error) {
+      alertError(error.toString());
+      // alert(error.toString());
+      //console.error(error);
     }
   };
 
@@ -70,7 +105,7 @@ function App() {
       return;
     }
 
-    fetchWeather();
+    fetchCityWeather(city);
     //setCity("");
   };
 
@@ -106,9 +141,21 @@ function App() {
 
     return `${day} ${date} ${month} ${year}`;
   }
+
+  const alertError = (msg) => {
+    MySwal.fire({
+      icon: "error",
+      title: "Oops...",
+      html: "<b style='color:red'>Please enter the exact name of the city.</b>",
+      footer: msg,
+      position: "top-end",
+      timer: 2000
+    });
+  };
+
   return (
     <div className="App">
-      {movie.id && weather ? (
+      {movie.id ? (
         <div
           className="banner"
           style={{
@@ -117,7 +164,7 @@ function App() {
             backgroundPosition: "center center"
           }}
         >
-          <form>
+          <form id="search_weather">
             <div className="search__container">
               <input
                 value={city}
