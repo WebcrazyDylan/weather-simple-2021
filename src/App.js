@@ -13,13 +13,15 @@ function App() {
 
   useEffect(() => {
     fetchData();
+  }, []);
+  useEffect(() => {
     fetchWeather();
   }, []);
 
   const fetchWeather = async () => {
     try {
       const openweathermap = axios.create({
-        baseURL: "http://api.openweathermap.org/data/2.5"
+        baseURL: "https://api.openweathermap.org/data/2.5"
       });
       const req_weather = await openweathermap.get(
         requests.fetchWeather.concat(`&q=${city}&units=metric`)
@@ -57,9 +59,9 @@ function App() {
     // console.log(req2.data.quote);
   };
 
-  const truncate = (str, n) => {
-    return str?.length > n ? str.substr(0, n - 1) + "..." : str;
-  };
+  // const truncate = (str, n) => {
+  //   return str?.length > n ? str.substr(0, n - 1) + "..." : str;
+  // };
 
   const sendForm = (e) => {
     e.preventDefault();
@@ -106,7 +108,7 @@ function App() {
   }
   return (
     <div className="App">
-      {movie.id ? (
+      {movie.id && weather ? (
         <div
           className="banner"
           style={{
