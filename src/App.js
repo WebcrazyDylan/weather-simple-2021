@@ -13,28 +13,49 @@ function App() {
 
   const [city, setCity] = useState("");
   const [weather, setWeather] = useState("");
+  const [sekeywords, setSekeywords] = useState([]);
   const [movie, setMovie] = useState([]);
   const [quote, setQuote] = useState("");
 
   const [driverCoords, setDriverCoords] = useState({ lng: 0, lat: 0 });
   const onSucces = ({ coords: { latitude, longitude } }) => {
     setDriverCoords({ lat: latitude, lng: longitude });
+    // console.log(driverCoords);
   };
   const onError = (error) => {
+    // alertError(error.toString());
+    alert("Please allow your location for weather.\n" + error.toString());
     console.log(error);
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
-
-  useEffect(() => {
+    // call_fetchGeolocationWeather();
     navigator.geolocation.watchPosition(onSucces, onError, {});
   }, []);
-
   useEffect(() => {
+    // call_fetchGeolocationWeather();
     fetchGeolocationWeather(driverCoords.lat, driverCoords.lng);
   }, [driverCoords.lat, driverCoords.lng]);
+  useEffect(() => {
+    let search_keywords = localStorage.getItem("WEATHER_KEYWORDS");
+    search_keywords = Boolean(search_keywords)
+      ? search_keywords.split(",")
+      : [];
+    setSekeywords(search_keywords);
+  }, []);
+
+  const call_fetchGeolocationWeather = () => {
+    //console.log(driverCoords.lat, driverCoords.lng);
+    //navigator.geolocation.watchPosition(onSucces, onError, {});
+    // console.log("call_fetchGeolocationWeather");
+    fetchGeolocationWeather(driverCoords.lat, driverCoords.lng);
+  };
+
+  const call_fetchCityWeather = (q_city) => {
+    // console.log("call_fetchCityWeather");
+    setCity(q_city);
+    fetchCityWeather(q_city);
+  };
 
   const fetchGeolocationWeather = async (lat, lng) => {
     try {
@@ -53,6 +74,7 @@ function App() {
 
   const fetchCityWeather = async (q_city) => {
     try {
+      // console.log("fetchCityWeather");
       const openweathermap = axios.create({
         baseURL: "https://api.openweathermap.org/data/2.5"
       });
@@ -61,12 +83,37 @@ function App() {
       );
       setWeather(req_weather.data);
       // console.log(req_weather.data);
+
+      let search_keywords = localStorage.getItem("WEATHER_KEYWORDS");
+      //console.log(1, search_keywords);
+      // console.log(Boolean(search_keywords));
+
+      search_keywords = Boolean(search_keywords)
+        ? search_keywords.split(",")
+        : [];
+      if (search_keywords.indexOf(q_city) !== -1) {
+        search_keywords = arrayRemove(search_keywords, q_city);
+      }
+
+      search_keywords.unshift(q_city);
+      if (search_keywords.length > 4) {
+        search_keywords.length = 4;
+      }
+      //console.log(2, search_keywords);
+      setSekeywords(search_keywords);
+
+      localStorage.setItem("WEATHER_KEYWORDS", search_keywords);
+      //console.log(3, sekeywords);
     } catch (error) {
       alertError(error.toString());
       // alert(error.toString());
       //console.error(error);
     }
   };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -98,6 +145,12 @@ function App() {
   //   return str?.length > n ? str.substr(0, n - 1) + "..." : str;
   // };
 
+  function arrayRemove(arr, value) {
+    return arr.filter(function (ele) {
+      return ele !== value;
+    });
+  }
+
   const sendForm = (e) => {
     e.preventDefault();
 
@@ -109,7 +162,7 @@ function App() {
     //setCity("");
   };
 
-  function dateBuilder(d) {
+  const dateBuilder = (d) => {
     let months = [
       "January",
       "February",
@@ -140,7 +193,7 @@ function App() {
     let year = d.getFullYear();
 
     return `${day} ${date} ${month} ${year}`;
-  }
+  };
 
   const alertError = (msg) => {
     MySwal.fire({
@@ -148,7 +201,7 @@ function App() {
       title: "Oops...",
       html: "<b style='color:red'>Please enter the exact name of the city.</b>",
       footer: msg,
-      position: "top-end",
+      // position: "top-end",
       timer: 2000
     });
   };
@@ -166,6 +219,7 @@ function App() {
         >
           <form id="search_weather">
             <div className="search__container">
+              <div className="search__date">{dateBuilder(new Date())}</div>
               <input
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
@@ -178,7 +232,25 @@ function App() {
               >
                 SEND
               </button>
-              <div className="search__date">{dateBuilder(new Date())}</div>
+              <div className="search__keywords">
+                <div
+                  className="search__keyword"
+                  onClick={call_fetchGeolocationWeather}
+                >
+                  Current locataion
+                </div>
+
+                {sekeywords.map((word) => (
+                  // <div key={word} onClick={() => console.log({ word })}>
+                  <div
+                    className="search__keyword"
+                    key={word}
+                    onClick={() => call_fetchCityWeather(word)}
+                  >
+                    {word}
+                  </div>
+                ))}
+              </div>
             </div>
           </form>
 
@@ -193,9 +265,9 @@ function App() {
               {/* {truncate(movie?.overview, 500)} */}
             </div>
             <div className="weather__info">
-              {weather && weather?.weather[0]?.main}
+              {weather && weather.weather[0].description}
               <br />
-              {weather && Math.round(weather.main.temp_min)}°c /{" "}
+              Min {weather && Math.round(weather.main.temp_min)}°c / Max{" "}
               {weather && Math.round(weather.main.temp_max)}°c
             </div>
           </div>
