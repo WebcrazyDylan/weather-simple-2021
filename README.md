@@ -15,3 +15,9 @@
 4. How can I easily fetch server data like open API?
 
    [axios](https://www.npmjs.com/package/axios)
+
+5. Other Resources
+
+   [Movie API](https://www.themoviedb.org/documentation/api)
+
+   [Quote API](https://favqs.com/api)
