@@ -202,7 +202,7 @@ function App() {
       html: "<b style='color:red'>Please enter the exact name of the city.</b>",
       footer: msg,
       // position: "top-end",
-      timer: 2000
+      timer: 4000
     });
   };
 
