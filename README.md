@@ -7,3 +7,7 @@
 2. How to save the user's city search keyword and provide it on return visits?
 
    [Window.localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage)
+
+3. How can I easily fetch server data like open API?
+
+   [axios](https://www.npmjs.com/package/axios)
