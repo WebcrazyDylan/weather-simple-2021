@@ -1,3 +1,5 @@
+# Simple Weather [Preview](https://weather.jonghyun.cf/)
+
 # Key points of this App
 
 1. How to get location of visitor and provide weather information automatically?
